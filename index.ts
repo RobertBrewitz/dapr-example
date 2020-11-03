@@ -6,11 +6,29 @@ import env from 'env-var';
 import { v4 } from 'uuid';
 
 const DAPR_HTTP_PORT = env.get('DAPR_HTTP_PORT').asPortNumber();
+const OKTA_SUBDOMAIN = '<okta subdomain>';
 
 const app = new Koa();
 const router = new Router();
 
-router.post('/subscriber', async ctx => {
+router.get('/login', (ctx) => {
+  ctx.redirect('http://localhost:3000/');
+});
+
+router.get('/', async (ctx) => {
+  ctx.body = `
+    <body>
+      <form
+        method="POST"
+        action="//localhost:3001/v1.0/invoke/dapr-example/method/publisher"
+      >
+        <button>Publish event and get userinfo</button>
+      </form>
+    </body>
+  `;
+});
+
+router.post('/subscriber', async (ctx) => {
   try {
     const {
       data: { uuid },
@@ -29,24 +47,39 @@ router.post('/subscriber', async ctx => {
   }
 });
 
-router.post('/publisher', async ctx => {
+router.post('/publisher', async (ctx) => {
   const uuid = v4();
 
   try {
     const state = [{ key: uuid, value: { timestamp: Date.now() } }];
-    console.log('Storing state:', state);
     await axios.post(
       `http://localhost:${DAPR_HTTP_PORT}/v1.0/state/state-name`,
       state
     );
 
     const message = { uuid };
-    console.log('Publishing message:', message);
     await axios.post(
       `http://localhost:${DAPR_HTTP_PORT}/v1.0/publish/pubsub-name/topic-name`,
       message
     );
-    ctx.status = 201;
+
+    const { data: userinfo } = await axios.get(
+      `https://${OKTA_SUBDOMAIN}.okta.com/oauth2/default/v1/userinfo`,
+      {
+        headers: { authorization: ctx.request.headers?.authorization },
+      }
+    );
+    ctx.body = `
+      <body>
+        <form
+          method="POST"
+          action="//localhost:3001/v1.0/invoke/dapr-example/method/publisher"
+        >
+          <button>Publish event and get userinfo</button>
+        </form>
+        <pre>${JSON.stringify({ state, message, userinfo }, null, 2)}</pre>
+      </body>
+    `;
   } catch (err) {
     console.error(err);
     ctx.throw(500);

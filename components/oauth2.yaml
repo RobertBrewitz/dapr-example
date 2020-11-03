@@ -1,0 +1,22 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: oauth2
+  namespace: default
+spec:
+  type: middleware.http.oauth2
+  metadata:
+  - name: clientId
+    value: "<OKTA_CLIENT_ID>"
+  - name: clientSecret
+    value: "<OKTA_CLIENT_SECRET>"
+  - name: scopes
+    value: "openid,profile"
+  - name: authURL
+    value: "https://<OKTA_SUBDOMAIN>.okta.com/oauth2/default/v1/authorize"
+  - name: tokenURL
+    value: "https://<OKTA_SUBDOMAIN>.okta.com/oauth2/default/v1/token"
+  - name: redirectURL
+    value: "http://localhost:3001/v1.0/invoke/dapr-example/method/login"
+  - name: authHeaderName
+    value: "Authorization"
