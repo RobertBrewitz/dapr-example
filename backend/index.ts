@@ -12,7 +12,7 @@ const STATE_ENDPOINT = `http://localhost:${DAPR_HTTP_PORT}/v1.0/state/state-name
 const app = new Koa();
 const router = new Router();
 
-const auth = async (ctx: Koa.Context, next: Koa.Next) => {
+const setUserId = async (ctx: Koa.Context, next: Koa.Next) => {
   try {
     const jwtToken = ctx.req.headers.authorization.split(' ')[1];
     const encodedPayload = jwtToken.split('.')[1];
@@ -21,11 +21,12 @@ const auth = async (ctx: Koa.Context, next: Koa.Next) => {
     );
 
     ctx.state.userId = decodedPayload.uid;
-    await next();
   } catch (err) {
     console.log(err);
     ctx.throw(401);
   }
+
+  await next();
 };
 
 router.post('/subscriber', async (ctx) => {
@@ -44,7 +45,7 @@ router.post('/subscriber', async (ctx) => {
   }
 });
 
-router.post('/publish', auth, async (ctx) => {
+router.post('/publish', setUserId, async (ctx) => {
   const uuid = v4();
 
   try {
