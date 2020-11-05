@@ -1,0 +1,22 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: okta
+  namespace: default
+spec:
+  type: middleware.http.oauth2clientcredentials
+  metadata:
+  - name: clientId
+    value: "${yourClientId}"
+  - name: clientSecret
+    value: "${yourClientSecret}"
+  - name: scopes
+    value: "yourOwnScope"
+  - name: tokenURL
+    value: "https://${yourOktaDomain}/oauth2/default/v1/token"
+  - name: headerName
+    value: "Authorization"
+  - name: endpointParamsQuery
+    value: ""
+  - name: authStyle
+    value: "1"

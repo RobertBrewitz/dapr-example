@@ -1,11 +1,11 @@
 {
-  "name": "dapr-example",
+  "name": "backend",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "dapr": "dapr run --app-id dapr-example --app-port 3000 --app-protocol http --components-path ./components npm run dev",
+    "dapr": "dapr run --app-id dapr-example --app-port 3000 --app-protocol http --components-path ./components --config ./../config/pipeline.yaml npm run dev",
     "build": "tsc",
     "start": "node build/index.js",
     "dev": "cross-env NODE_ENV=dev nodemon -w index.ts -w src/ -x \"tsc && npm run start\" -V -e ts",
