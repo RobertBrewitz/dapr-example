@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, shrink-to-fit=no"
+    />
+    <
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+      integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk"
+      crossorigin="anonymous"
+    />
+    <title>Simple Web Page</title>
+    <style>
+      h1 {
+        margin: 2em 0;
+      }
+    </style>
+    <!-- widget stuff here -->
+    <script
+      src="https://global.oktacdn.com/okta-signin-widget/4.3.2/js/okta-sign-in.min.js"
+      type="text/javascript"
+    ></script>
+    <link
+      href="https://global.oktacdn.com/okta-signin-widget/4.3.2/css/okta-sign-in.min.css"
+      type="text/css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="text-center">Okta Powered Frontend & Backend</h1>
+      <div class="jumbotron">
+        <p id="messageBox">You are not logged in.</p>
+        <br />
+        <button class="btn btn-primary" onclick="callPublisher()">
+          Call Backend
+        </button>
+      </div>
+      <!-- where the sign-in form will be displayed -->
+      <div id="okta-login-container"></div>
+      <button
+        id="logout"
+        class="button"
+        onclick="logout()"
+        style="display: none"
+      >
+        Logout
+      </button>
+    </div>
+    <script type="text/javascript">
+      var oktaSignIn = new OktaSignIn({
+        baseUrl: "https://${yourOktaDomain}",
+        clientId: "${yourClientId}",
+        authParams: {
+          issuer: "https://${yourOktaDomain}/oauth2/default",
+          responseType: ["token", "id_token"],
+          display: "page",
+        },
+      });
+
+      if (oktaSignIn.hasTokensInUrl()) {
+        oktaSignIn.authClient.token.parseFromUrl().then(
+          // If we get here, the user just logged in.
+          function success(res) {
+            var accessToken = res.tokens.accessToken;
+            var idToken = res.tokens.idToken;
+            console.log(accessToken);
+
+            oktaSignIn.authClient.tokenManager.add("accessToken", accessToken);
+            oktaSignIn.authClient.tokenManager.add("idToken", idToken);
+
+            document.getElementById("messageBox").innerHTML =
+              "You are logged in as " + idToken.claims.email;
+            document.getElementById("logout").style.display = "block";
+          },
+          function error(err) {
+            console.error(err);
+          }
+        );
+      } else {
+        oktaSignIn.authClient.token.getUserInfo().then(
+          function (user) {
+            document.getElementById("messageBox").innerHTML =
+              "You are still logged in as " + user.email;
+            document.getElementById("logout").style.display = "block";
+          },
+          function (error) {
+            oktaSignIn.renderEl(
+              { el: "#okta-login-container" },
+              function success(res) {},
+              function error(err) {
+                console.error(err);
+              }
+            );
+          }
+        );
+      }
+
+      function logout() {
+        oktaSignIn.authClient.signOut();
+        location.reload();
+      }
+
+      function foo() {
+        console.log("foo");
+      }
+
+      function callPublisher() {
+        oktaSignIn.authClient.tokenManager
+          .get("accessToken")
+          .then(({ accessToken }) => {
+            fetch("http://localhost:3000/publish", {
+              method: "POST",
+              headers: {
+                authorization: "Bearer " + accessToken,
+                "content-type": "application/json",
+                accept: "application/json",
+              },
+            })
+              .then((res) => res.json())
+              .then((data) => console.log(data))
+              .catch((err) => console.error(err));
+          });
+      }
+    </script>
+  </body>
+</html>
