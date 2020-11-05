@@ -12,32 +12,15 @@ const STATE_ENDPOINT = `http://localhost:${DAPR_HTTP_PORT}/v1.0/state/state-name
 const app = new Koa();
 const router = new Router();
 
-const auth = async (ctx, next) => {
+const auth = async (ctx: Koa.Context, next: Koa.Next) => {
   try {
-    const {
-      req: {
-        headers: { authorization },
-      },
-    } = ctx;
-
-    const jwtToken = authorization.split(' ')[1];
+    const jwtToken = ctx.req.headers.authorization.split(' ')[1];
     const encodedPayload = jwtToken.split('.')[1];
     const decodedPayload = JSON.parse(
       Buffer.from(encodedPayload, 'base64').toString('utf-8')
     );
 
-    // Expired?
-    if (decodedPayload.exp * 1000 < Date.now()) {
-      ctx.throw(401);
-    }
-
     ctx.state.userId = decodedPayload.uid;
-
-    // userId?
-    if (!ctx.state.userId) {
-      ctx.throw(401);
-    }
-
     await next();
   } catch (err) {
     console.log(err);
