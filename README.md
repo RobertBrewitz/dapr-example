@@ -50,3 +50,7 @@ npm start
 ## Open up your browser, login to Okta
 
 [localhost:8080](http://localhost:8080)
+
+# License
+
+[ICS License](./LICENSE)
